@@ -17,7 +17,8 @@
 struct shellInfo {
 
 	//Info from the command line
-	char* command;
+	char* line;
+	char* command; //This is the first argument
 	char** args;
 	int argcount;
 

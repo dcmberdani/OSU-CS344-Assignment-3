@@ -31,15 +31,15 @@ void mainLoop()
 		printf(": ");
 
 		//Just prompt again if a comment or empty prompt is found
-		si->command = getLineInput() ;
-		if (lineIsValid(si->command) == 0) {
+		si->line = getLineInput() ;
+		if (lineIsValid(si->line) == 0) {
 			printf("\tBlank Line or Comment inputted; please reinput;\n");
 			continue;
 		}
 
-		si->args = tokenizeLine(si->command);
+		si->args = tokenizeLine(si->line);
 		si->command = si->args[0]; //Command is the first argument
-		//printf("Command: %s\n", si->command);
+		//printf("Command: %s\n", si->line);
 
 		si->argcount = countArgs(si->args);
 		printf("\tArguments counted: %d\n", si->argcount);
@@ -202,7 +202,7 @@ void freeSIMembers(struct shellInfo *si)
 		counter++;
 	}
 		
-	free(si->command);
+	free(si->line);
 	free(si->args);
 
 }
