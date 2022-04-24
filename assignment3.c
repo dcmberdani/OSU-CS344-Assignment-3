@@ -13,8 +13,8 @@
 //	ADAPTED FROM https://brennan.io/2015/01/16/write-a-shell-in-c/
 void mainLoop() 
 {
-	char *line; //Full line from the user
-	char **args; //Array of tokenized arguments
+	//char *line; //Full line from the user
+	//char **args; //Array of tokenized arguments
 	int status = 1; //Whether or not to continue; Based on argument execution
 
 	struct shellInfo *si = malloc (sizeof (struct shellInfo));
@@ -27,16 +27,23 @@ void mainLoop()
 		si->command = getLineInput() ;
 		if (lineIsValid(si->command) == 0) {
 			printf("\tBlank Line or Comment inputted; please reinput;\n");
+			continue;
 		}
 
+		printf("\tLegit input found\n");
 
-		si->args = tokenizeLine(line);
+
+		si->args = tokenizeLine(si->command);
 
 		//Both are allocated in called functions, not in the main loop
 		free(si->command);
 		free(si->args);
+
+		status = 0;
 		
 	} while (status);
+
+	free(si);
 
 }
 
@@ -76,8 +83,10 @@ char* getLineInput() {
 
 // Validates the line input, making sure there are no chars
 int lineIsValid(char* line){
-	if (line[0] == '\0' || line[0] == '#')
+	if (line[0] == '\0' || line[0] == '#') {
+		free(line); //Not going to be freed in the loop
 		return 0;
+	}
 	else
 		return 1;
 }
