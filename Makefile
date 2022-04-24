@@ -2,11 +2,14 @@ CC=gcc --std=gnu99 -g
 
 all: smallsh
 
-assignment3.o: assignment3.c assignment3.h
-	$(CC) -c assignment3.c
+cmdline.o: cmdline.c cmdline.h  shellinfo.h
+	$(CC) -c cmdline.c shellinfo.h
 
-smallsh: main.c assignment3.o
-	$(CC) assignment3.o main.c -o smallsh
+functions.o: functions.c functions.h  shellinfo.h
+	$(CC) -c functions.c  shellinfo.h
+
+smallsh: main.c cmdline.o functions.o shellinfo.h
+	$(CC) cmdline.o functions.o shellinfo.h main.c -o smallsh
 
 clean:
-	rm -rf assignment3.o smallsh
+	rm -rf cmdline.o functions.o smallsh shellinfo.h.gch
