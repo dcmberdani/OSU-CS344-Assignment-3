@@ -6,6 +6,8 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include <unistd.h> //Process identification
+
 #include "assignment3.h"
 
 
@@ -18,7 +20,8 @@ void mainLoop()
 	int status = 1; //Whether or not to continue; Based on argument execution
 
 	struct shellInfo *si = malloc (sizeof (struct shellInfo));
-	
+	si->shellPID = getpid();
+	printf("PID of the shell: %d\n", si->shellPID);
 
 	do {
 		printf(": ");
@@ -34,6 +37,8 @@ void mainLoop()
 
 
 		si->args = tokenizeLine(si->command);
+		si->argcount = countArgs(si->args);
+		printf("\tArguments counted: %d\n", si->argcount);
 
 		//Both are allocated in called functions, not in the main loop
 		free(si->command);
@@ -126,9 +131,12 @@ int countArgs(char** args)
 {
 	int counter = 0;
 	char* currArg;
-	while (currArg != NULL){
+	do {
 		currArg = args[counter];
 		counter++;
+		//printf("Current argument: %s\nCurrent count: %d\n", currArg, counter);
 	}
-	return counter;
+	while (currArg != NULL);
+
+	return (counter - 1); // 1 for while loop, maybe 1 for ignoring the command
 }

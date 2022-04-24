@@ -15,6 +15,8 @@
 
 //STRUCT THAT STORES ALL INFORMATION
 struct shellInfo {
+
+	//Info from the command line
 	char* command;
 	char** args;
 	int argcount;
@@ -26,6 +28,7 @@ struct shellInfo {
 	char currentDir[100];
 
 	//General process info
+	int shellPID;
 	int pidList[MAX_PROCESS_COUNT];
 	int processCount;
 	int processStatus;
