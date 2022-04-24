@@ -35,7 +35,7 @@ int cdBI(struct shellInfo *si)
 		fprintf(stderr, "Expected argument to 'cd'\n");
 	} else {
 		if (chdir(si->args[1]) != 0)
-			perror("Error with navigating the given directory: ");
+			perror("Error with navigating the given directory");
 	}
 
 	//The 1 returned is used to signal the 'status' flag that the shell should continue
@@ -63,8 +63,7 @@ int executeCommand(struct shellInfo *si)
 {
 	//If the command passed in matches a builtin, then call it
 	for (int i = 0; i < NUM_BUILTINS; i++){
-		printf("CURRENT BUILTIN BEING CHECKED: '%s'\n", builtinNames[i]);
-		if (strcmp(si->command, builtinNames[i]) == 0)
+		if (strcmp(si->args[0], builtinNames[i]) == 0)
 			return (*builtinFunArr[i])(si);
 	}
 

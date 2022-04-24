@@ -13,3 +13,9 @@ smallsh: main.c cmdline.o functions.o shellinfo.h
 
 clean:
 	rm -rf cmdline.o functions.o smallsh shellinfo.h.gch
+
+run:
+	bash ./p3testscript-1
+
+test:
+	bash ./VALGRINDp3testscript-1

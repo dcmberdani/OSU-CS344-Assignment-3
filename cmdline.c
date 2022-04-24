@@ -15,8 +15,6 @@
 //	ADAPTED FROM https://brennan.io/2015/01/16/write-a-shell-in-c/
 void mainLoop() 
 {
-	//char *line; //Full line from the user
-	//char **args; //Array of tokenized arguments
 	int status = 1; //Whether or not to continue; Based on argument execution
 
 	struct shellInfo *si = malloc (sizeof (struct shellInfo));
@@ -38,11 +36,8 @@ void mainLoop()
 		}
 
 		si->args = tokenizeLine(si->line);
-		si->command = si->args[0]; //Command is the first argument
-
 		si->argcount = countArgs(si->args);
 		expandVars(si->args);
-
 
 		//AFTER THAT WORK TAKING USER INPUT, DO FUNCTIONS HERE
 		status = executeCommand(si);
@@ -76,6 +71,10 @@ char* getLineInput() {
 	//	At eof/newline, make the ending char null, to act as the null terminator, then reutrn
 	while (1) {
 		c = getchar(); //from stdio.h
+
+		if (c == EOF)
+			printf("WE HAVE RECEIVED EOF");
+
 		if (c == EOF || c == '\n'){
 			buffer[position] = '\0';
 			return buffer;
@@ -105,7 +104,7 @@ int lineIsValid(char* line){
 char** tokenizeLine(char* line)
 {
 	int position = 0; //Current position within a token
-	char **tokens = malloc(ARG_BUFFER_SIZE * sizeof(char*)); //Array of bufers
+	char **tokens = malloc(MAX_ARG_COUNT * sizeof(char*)); //Array of buffers storing arguments
 	char *currToken, *tempToken; //Pointer to use
 
 	//Very similar to error handling above
@@ -118,14 +117,8 @@ char** tokenizeLine(char* line)
 
 	//While there are still tokens in the line
 	while (currToken != NULL) {
-		/*
-		tokens[position] = currToken; //Place the tokenized value into the array of chars 
-		position++;
-		currToken = strtok(NULL, " \n\t\a\r"); // strtok from NULL just continus where it left off
-		*/
-		
 		tempToken = malloc(sizeof(char) * ARG_BUFFER_SIZE);
-		strcpy(tempToken, currToken);
+		strncpy(tempToken, currToken, ARG_BUFFER_SIZE);
 		tokens[position] = tempToken;
 		position++;
 
@@ -146,7 +139,6 @@ int countArgs(char** args)
 	do {
 		currArg = args[counter];
 		counter++;
-		//printf("Current argument: %s\nCurrent count: %d\n", currArg, counter);
 	}
 	while (currArg != NULL);
 
@@ -161,26 +153,21 @@ void expandVars(char** args) {
 	char *pidStr;
 	int shellPID = getpid();
 
-
-	while (1) {
-		currArg = args[counter];
-		if (!currArg)
-			break;
+	currArg = args[counter];
+	while (args[counter]) {
 
 		if (strcmp(currArg, "$$") == 0) {
-			printf("\tREPLACING %s WITH %d\n", currArg, shellPID);
+			free(currArg);
 
 			pidStr = malloc(sizeof(char) * ARG_BUFFER_SIZE);
-			sprintf(pidStr, "%d", shellPID);
-
+			sprintf(pidStr, "%d\0", shellPID);
 			args[counter] = pidStr;
-			free(currArg);
+
 		}
 
-		printf("Current arg: %s\n", args[counter]);
 		counter++;
+		currArg = args[counter];
 	}
-	
 
 }
 
@@ -190,18 +177,17 @@ void freeSIMembers(struct shellInfo *si)
 {
 	char* currArg;
 	int counter = 0;	
-	while (1) {
+	while (si->args[counter]) {
 		currArg = si->args[counter];
-		if (!currArg)
-			break;
 
 		free(currArg);
 
 		counter++;
 	}
+	
 		
 	free(si->line);
-	free(si->args);
 
+	free(si->args);
 }
 
