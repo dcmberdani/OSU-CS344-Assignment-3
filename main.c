@@ -13,5 +13,8 @@ int main(int argc, char *argv[])
 {	
 	printf("Nothing is going horrible wrong atm.\n");
 
+	// Runs the main shell loop
+	mainLoop();
+
 	return EXIT_SUCCESS;
 }
