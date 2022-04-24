@@ -10,8 +10,11 @@ COMPILING:
 	The final executable is named 'smallsh'
 
 EXECUTING:
-	The program relies on a grading script
-	WRITE MORE INFO HERE
+	The program relies on a grading script To use it, type:
+		bash ./p3testscript-1
+	A macro has been provided in the makefile to run the script.
+		To run it type: make run
+		To run it with valgrind type: make test
 
 CLEANUP:
 	In order to remove the executable/object files from the directory, type 'make clean'
