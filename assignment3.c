@@ -38,6 +38,9 @@ void mainLoop()
 		}
 
 		si->args = tokenizeLine(si->command);
+		si->command = si->args[0]; //Command is the first argument
+		//printf("Command: %s\n", si->command);
+
 		si->argcount = countArgs(si->args);
 		printf("\tArguments counted: %d\n", si->argcount);
 
