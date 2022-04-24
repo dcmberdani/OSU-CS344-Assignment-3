@@ -9,7 +9,7 @@
 
 //CONSTANTS USED BOTH IN HERE AND IN THE ASSIGNMENT
 #define CMDLINE_BUFFER_SIZE 2048
-#define ARG_BUFFER_SIZE 64
+#define ARG_BUFFER_SIZE 16
 #define MAX_ARG_COUNT 512
 #define MAX_PROCESS_COUNT 100
 
@@ -46,5 +46,9 @@ int lineIsValid(char* line);
 char** tokenizeLine(char* line);
 
 int countArgs(char** args);
+
+void expandVars(char** args);
+
+void freeSIMembers(struct shellInfo *si);
 
 #endif

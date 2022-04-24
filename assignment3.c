@@ -23,6 +23,10 @@ void mainLoop()
 	si->shellPID = getpid();
 	printf("PID of the shell: %d\n", si->shellPID);
 
+
+	//TEMPORARY
+	int counter = 0;
+
 	do {
 		printf(": ");
 
@@ -33,21 +37,20 @@ void mainLoop()
 			continue;
 		}
 
-		printf("\tLegit input found\n");
-
-
 		si->args = tokenizeLine(si->command);
 		si->argcount = countArgs(si->args);
 		printf("\tArguments counted: %d\n", si->argcount);
 
+		expandVars(si->args);
+
 		//Both are allocated in called functions, not in the main loop
-		free(si->command);
-		free(si->args);
+		freeSIMembers(si);
 
 		status = 0;
 		
 	} while (status);
 
+	//After finishing shell, free it
 	free(si);
 
 }
@@ -102,7 +105,7 @@ char** tokenizeLine(char* line)
 {
 	int position = 0; //Current position within a token
 	char **tokens = malloc(ARG_BUFFER_SIZE * sizeof(char*)); //Array of bufers
-	char *currToken; //Pointer to use
+	char *currToken, *tempToken; //Pointer to use
 
 	//Very similar to error handling above
 	if (!tokens){
@@ -114,11 +117,19 @@ char** tokenizeLine(char* line)
 
 	//While there are still tokens in the line
 	while (currToken != NULL) {
-		//printf("ITERATION: %d\n, CURRTOK: %s\n", position, currToken);
+		/*
 		tokens[position] = currToken; //Place the tokenized value into the array of chars 
+		position++;
+		currToken = strtok(NULL, " \n\t\a\r"); // strtok from NULL just continus where it left off
+		*/
+		
+		tempToken = malloc(sizeof(char) * ARG_BUFFER_SIZE);
+		strcpy(tempToken, currToken);
+		tokens[position] = tempToken;
 		position++;
 
 		currToken = strtok(NULL, " \n\t\a\r"); // strtok from NULL just continus where it left off
+		
 	}
 
 	//After there are no more tokens, set the final position in the array to NULL
@@ -140,3 +151,56 @@ int countArgs(char** args)
 
 	return (counter - 1); // 1 for while loop, maybe 1 for ignoring the command
 }
+
+//Expands all instances of '$$' to the PID of the shell
+void expandVars(char** args) {
+	char* currArg;
+	int counter = 0;
+
+	char *pidStr;
+	int shellPID = getpid();
+
+
+	while (1) {
+		currArg = args[counter];
+		if (!currArg)
+			break;
+
+		if (strcmp(currArg, "$$") == 0) {
+			printf("\tREPLACING %s WITH %d\n", currArg, shellPID);
+
+			pidStr = malloc(sizeof(char) * ARG_BUFFER_SIZE);
+			sprintf(pidStr, "%d", shellPID);
+
+			args[counter] = pidStr;
+			free(currArg);
+		}
+
+		printf("Current arg: %s\n", args[counter]);
+		counter++;
+	}
+	
+
+}
+
+//Frees all allocated memory in the shellInfo struct
+//	NOT the shellInfo struct itself
+void freeSIMembers(struct shellInfo *si)
+{
+	char* currArg;
+	int counter = 0;	
+	while (1) {
+		currArg = si->args[counter];
+		if (!currArg)
+			break;
+
+		free(currArg);
+
+		counter++;
+	}
+		
+	free(si->command);
+	free(si->args);
+
+}
+
