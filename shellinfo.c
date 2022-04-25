@@ -1,3 +1,4 @@
+#include <stdlib.h> //Free
 #include "shellinfo.h"
 
 //Frees all allocated memory in the shellInfo struct
