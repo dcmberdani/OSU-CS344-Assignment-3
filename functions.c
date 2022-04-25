@@ -7,6 +7,8 @@
 #include <string.h>
 
 #include <unistd.h> //General OS functionality
+#include <wait.h> //Waitpid
+#include <sys/types.h> //pid_t
 
 #include "functions.h"
 
@@ -21,6 +23,17 @@ char *builtinNames[] = {"cd", "exit", "status"};
 int (*builtinFunArr[]) (struct shellInfo *si) = {&cdBI, &exitBI, &statusBI};
 
 
+//JUST TO TEST
+void printArgs(struct shellInfo *si)
+{
+	int i = 0;
+	printf("Args being executed: ");
+	while (si->args[i]){
+		printf(si->args[i]);
+		i++;
+	}
+	printf("\n");
+}
 
 
 //BUILT IN FUNCTIONS
@@ -61,6 +74,7 @@ int statusBI(struct shellInfo *si)
 //	ADAPTED FROM https://brennan.io/2015/01/16/write-a-shell-in-c/
 int executeCommand(struct shellInfo *si)
 {
+	//printArgs(si);	
 	//If the command passed in matches a builtin, then call it
 	for (int i = 0; i < NUM_BUILTINS; i++){
 		if (strcmp(si->args[0], builtinNames[i]) == 0)
@@ -68,7 +82,43 @@ int executeCommand(struct shellInfo *si)
 	}
 
 	//Otherwise, fork/exec to execute non-built-ins
-	return 1;
+	
+	return executeNonBI(si);
+	//return 1;
 }
 
 
+//Again, https://brennan.io/2015/01/16/write-a-shell-in-c/
+int executeNonBI(struct shellInfo *si) 
+{
+	pid_t pid; //pid for current process
+	pid_t wpid; //pid for waiting parent process while child process executes in foreground
+	int status; //status var for the waitpid function to access
+	
+	pid = fork();
+	if (pid == 0) {
+		//Child Process
+		//	if 'execvp' fails, print error and exit with failure
+		if (execvp(si->args[0], si->args) == -1)
+			perror("Error with 'execvp' in child process");
+		
+		//Free SI on failed child process before exiting
+		freeSIMembers(si);
+		free(si);
+
+		exit(EXIT_FAILURE);
+	} else if (pid < 0) {
+		//Fork error
+		perror("Error while forking");
+	} else {
+		//Parent Process
+		//Have it wait while child executes
+		//	Exit when WIFEXITED and WITSIGNALED alow`
+		do {
+			wpid = waitpid(pid, &status, WUNTRACED);
+		} while (!WIFEXITED(status) && !WIFSIGNALED(status));
+	}
+
+	//If nothing goes wrong, then return 1
+	return 1;
+}

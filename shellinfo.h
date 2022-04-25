@@ -3,7 +3,7 @@
 
 //CONSTANTS USED THROUGH THE ASSIGNMENT
 #define CMDLINE_BUFFER_SIZE 2048
-#define ARG_BUFFER_SIZE 16
+#define ARG_BUFFER_SIZE 64
 #define MAX_ARG_COUNT 512
 #define MAX_PROCESS_COUNT 100
 
@@ -30,5 +30,8 @@ struct shellInfo {
 	int processStatus;
 };
 
+
+//FUNCTION TO HANDLE STRUCT MEMORY
+void freeSIMembers(struct shellInfo *si);
 
 #endif

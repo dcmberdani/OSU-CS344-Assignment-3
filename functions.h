@@ -18,4 +18,6 @@ int statusBI(struct shellInfo *si);
 //	If not, execute a non-built-in
 int executeCommand(struct shellInfo *si);
 
+int executeNonBI(struct shellInfo *si);
+
 #endif

@@ -50,8 +50,8 @@ void mainLoop()
 
 	//After finishing shell, free it
 	free(si);
-
 }
+
 //Get input from STDIN
 //	ADAPTED FROM https://brennan.io/2015/01/16/write-a-shell-in-c/
 char* getLineInput() {
@@ -153,15 +153,46 @@ void expandVars(char** args) {
 	char *pidStr;
 	int shellPID = getpid();
 
+	char *lPtr, *rPtr, *idPtr, *out;
+
 	currArg = args[counter];
 	while (args[counter]) {
+		//If an instance of "$$" is found, place it in 'idPtr'
+		while ( idPtr = strstr(currArg, "$$") ) {
+			rPtr = NULL;
+			//Left pointer is beginning char of string
+			lPtr = currArg;
 
-		if (strcmp(currArg, "$$") == 0) {
-			free(currArg);
+			//Right pointer is first value right of the '$$'
+			if ( *(idPtr+2) != '\0' )
+				rPtr = (idPtr+2);
+
+			*idPtr = '\0'; //Set the first $ to be null terminated to allow the lPtr to properly work
+
 
 			pidStr = malloc(sizeof(char) * ARG_BUFFER_SIZE);
-			sprintf(pidStr, "%d\0", shellPID);
-			args[counter] = pidStr;
+			sprintf(pidStr, "%d", shellPID);
+
+			out = malloc(sizeof(char) * ARG_BUFFER_SIZE);
+			*out = '\0'; //Just so it initializes to smth
+
+			//If there  is a left side, append it to final string
+			//	Same with right
+			//	In both cases, append the pidStr to the value
+			if (lPtr != idPtr) 
+				strcpy(out, lPtr);
+
+			strcat(out, pidStr);
+			
+			if (rPtr)
+				strcat(out, rPtr);
+
+			
+
+			args[counter] = out;
+			free(currArg);
+			free(pidStr);
+			currArg = args[counter];
 
 		}
 
@@ -169,25 +200,5 @@ void expandVars(char** args) {
 		currArg = args[counter];
 	}
 
-}
-
-//Frees all allocated memory in the shellInfo struct
-//	NOT the shellInfo struct itself
-void freeSIMembers(struct shellInfo *si)
-{
-	char* currArg;
-	int counter = 0;	
-	while (si->args[counter]) {
-		currArg = si->args[counter];
-
-		free(currArg);
-
-		counter++;
-	}
-	
-		
-	free(si->line);
-
-	free(si->args);
 }
 
