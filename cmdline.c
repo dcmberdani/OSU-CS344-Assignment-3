@@ -11,16 +11,15 @@
 #include "cmdline.h"
 #include "functions.h" //Needed to call executeCommand
 
+
+
 //INCLUDE FUNCTION DEFINITIONS BELOW
 //	ADAPTED FROM https://brennan.io/2015/01/16/write-a-shell-in-c/
 void mainLoop() 
 {
-	int status = 1; //Whether or not to continue; Based on argument execution
-
 	struct shellInfo *si = malloc (sizeof (struct shellInfo));
 	si->shellPID = getpid();
-	printf("PID of the shell: %d\n", si->shellPID);
-
+	si->bgProcessCount = 0;
 
 	//TEMPORARY
 	int counter = 0;
@@ -30,23 +29,25 @@ void mainLoop()
 
 		//Just prompt again if a comment or empty prompt is found
 		si->line = getLineInput() ;
-		if (lineIsValid(si->line) == 0) {
-			printf("\tBlank Line or Comment inputted; please reinput;\n");
+		if (lineIsValid(si->line) == 0) 
 			continue;
-		}
 
 		si->args = tokenizeLine(si->line);
 		si->argcount = countArgs(si->args);
 		expandVars(si->args);
 
 		//AFTER THAT WORK TAKING USER INPUT, DO FUNCTIONS HERE
-		status = executeCommand(si);
+		//status = executeCommand(si);
+		si->status = executeCommand(si);
 
 		//Both are allocated in called functions, not in the main loop
 		freeSIMembers(si);
 
+		//After a single loop, clean up every zombie
+		cleanUpZombies(si);
+
 		
-	} while (status);
+	} while (si->status);
 
 	//After finishing shell, free it
 	free(si);

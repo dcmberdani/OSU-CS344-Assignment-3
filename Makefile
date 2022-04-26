@@ -15,7 +15,7 @@ smallsh: main.c cmdline.o functions.o shellinfo.o
 	$(CC) cmdline.o functions.o shellinfo.o main.c -o smallsh
 
 clean:
-	rm -rf cmdline.o functions.o shellinfo.o shellinfo.h.gch smallsh testdir*
+	rm -rf cmdline.o functions.o shellinfo.o shellinfo.h.gch junk smallsh-test-dir smallsh ~/testdir*
 
 run:
 	bash ./p3testscript-1

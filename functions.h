@@ -20,4 +20,9 @@ int executeCommand(struct shellInfo *si);
 
 int executeNonBI(struct shellInfo *si);
 
+//Checks for background
+int isBgProc(struct shellInfo *si);
+
+void cleanUpZombies(struct shellInfo *si);
+
 #endif

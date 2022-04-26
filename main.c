@@ -16,9 +16,10 @@
 #include "cmdline.h"
 //#include "functions.h" ; ALREADY INCLUDED IN CMDLINE
 
+
 int main(int argc, char *argv[])
 {	
-	printf("Nothing is going horrible wrong atm.\n");
+	
 
 	// Runs the main shell loop
 	mainLoop();
