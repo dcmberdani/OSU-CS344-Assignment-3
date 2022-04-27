@@ -14,24 +14,27 @@ struct shellInfo {
 
 	//Info from the command line
 	char* line;
-	//char* command; //This is the first argument
 	char** args;
 	int argcount;
 
-	//Other stuff to use later; Maybe in separate struct?
-	//Specifioc Process Info
-	int canBackground;
-	int isBackground;	
-	char currentDir[100];
-
-	//General process info
+	//Shell info
 	int shellPID;
-	int status;
+	int status; // This isn't for foreground processes, but for the shell itself
+
+	//Info to determine i/o redirection
+	int isInRedir;
+	int isOutRedir;
+	char *inDir;
+	char *outDir;
+
+	//Background process info
+	int isBackground; // used to determine if the next process is to be background
 	int bgPidList[MAX_PROCESS_COUNT];
 	int bgProcessCount;
 
 	//Info about last ended process
 	int pIfExited;
+	int pIfSignaled;
 	int pExitStatus;
 	int pTermSignal;
 };

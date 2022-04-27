@@ -18,11 +18,12 @@
 void mainLoop() 
 {
 	struct shellInfo *si = malloc (sizeof (struct shellInfo));
+	//Some necessary initializations
 	si->shellPID = getpid();
 	si->bgProcessCount = 0;
-
-	//TEMPORARY
-	int counter = 0;
+	si->pIfExited = 0;
+	si->pIfSignaled = 0;
+	si->status = 1; //Keep running on initial comment
 
 	do {
 		printf(": ");
@@ -40,7 +41,7 @@ void mainLoop()
 		//status = executeCommand(si);
 		si->status = executeCommand(si);
 
-		//Both are allocated in called functions, not in the main loop
+		//Some members are allocated in called functions, not in the main loop
 		freeSIMembers(si);
 
 		//After a single loop, clean up every zombie

@@ -20,6 +20,9 @@ int executeCommand(struct shellInfo *si);
 
 int executeNonBI(struct shellInfo *si);
 
+//Checks if a process is or isn't to have their i/o redirected
+void checkRedirIO(struct shellInfo *si);
+
 //Checks for background
 int isBgProc(struct shellInfo *si);
 

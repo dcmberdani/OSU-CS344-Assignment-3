@@ -51,7 +51,7 @@ int cdBI(struct shellInfo *si)
 			perror("Error with navigating the given directory");
 	}
 
-	//The 1 returned is used to signal the 'status' flag that the shell should continue
+	//The 1 returned is used to signal that the shell should continue
 	return 1;
 }
 
@@ -64,11 +64,19 @@ int statusBI(struct shellInfo *si)
 {
 	//If the process exited, then print the exit status
 	//If the process was closed by a sginal, print the terminating signal
-	if (si->pIfExited)
-		printf("exit value %d\n", si->pExitStatus);
-	else
-		printf("terminated by signal %d\n", si->pTermSignal);
-	return si->status;
+	//If neither, then no foreground process has executed so
+	if (si->pIfExited) {
+		printf("Exit value %d\n", si->pExitStatus);
+		//return si->pExitStatus;
+	} else if (si->pIfSignaled){
+		printf("Terminated by signal %d\n", si->pTermSignal);
+		//return si->pTermSignal;
+	} else {
+		printf("No foreground process has run yet\n");
+	}
+
+	//The 1 returned is used to signal that the shell should continue
+	return 1;
 }
 
 
@@ -79,6 +87,8 @@ int executeCommand(struct shellInfo *si)
 {
 	//First, check to see if it's a background procedure
 	si->isBackground = isBgProc(si);
+	//Then, see if there is any redirection
+	checkRedirIO(si);
 
 	//printArgs(si);	
 	//If the command passed in matches a builtin, then call it
@@ -88,6 +98,7 @@ int executeCommand(struct shellInfo *si)
 	}
 
 	//Otherwise, fork/exec to execute non-built-ins
+
 
 	
 	return executeNonBI(si);
@@ -100,7 +111,7 @@ int executeNonBI(struct shellInfo *si)
 {
 	pid_t pid; //pid for current process
 	pid_t wpid; //pid for waiting parent process while child process executes in foreground
-	int status; //status var for the waitpid function to access
+	int status = 0; //status var for the waitpid function to access
 	
 	pid = fork();
 	if (pid == 0) {
@@ -129,18 +140,20 @@ int executeNonBI(struct shellInfo *si)
 		//Have it wait while child executes
 		//	Exit when WIFEXITED and WITSIGNALED alow`
 
-		//IF THE PROCESS IS BACKGROUND, THEN USE THE WNOHANg CONSTANT
+		//IF THE PROCESS IS BACKGROUND, THEN USE THE WNOHANG CONSTANT
 		if (si->isBackground) {
 			do {
 				wpid = waitpid(pid, &status, WNOHANG);
-				si->pIfExited = WIFEXITED(status);
-				si->pExitStatus = WEXITSTATUS(status);
-				si->pTermSignal = WTERMSIG(status);
+				//ONLY KEEP TRACK OF THESE FOR FOREGROUND PROCESSES
+				//si->pIfExited = WIFEXITED(status);
+				//si->pExitStatus = WEXITSTATUS(status);
+				//si->pTermSignal = WTERMSIG(status);
 			} while (!WIFEXITED(status) && !WIFSIGNALED(status));
 		} else {
 			do {
 				wpid = waitpid(pid, &status, WUNTRACED);
 				si->pIfExited = WIFEXITED(status);
+				si->pIfSignaled = WIFSIGNALED(status);
 				si->pExitStatus = WEXITSTATUS(status);
 				si->pTermSignal = WTERMSIG(status);
 			} while (!WIFEXITED(status) && !WIFSIGNALED(status));
@@ -163,6 +176,49 @@ int isBgProc(struct shellInfo *si) {
 	return 0;
 }
 
+
+//NOTE: Because of how this checks args, it's MANDATORY to call AFTER isBgProc
+void checkRedirIO(struct shellInfo *si) {
+	int counter = 0;	
+
+	//By default DON'T REDIRECT IO
+	si->isInRedir = 0;
+	si->isOutRedir = 0;
+
+	//Run through the array of args 
+	//	Check for either  a '>' or a '<'
+	//	If they are there:
+	//		Set the si struct flag for input I or O redir
+	//		Have the si struct point to them 
+	//		free the '<' and/or '>' arg
+	//		point all values in the arg array to NULL
+	//	Note: Because the output files aren't freed here, but are removed from array, they will leak
+	//		Thus, they have to be cleaned by the function that frees other si struct memory
+	while (si->args[counter]) {
+		if (strcmp(si->args[counter], "<") == 0) {
+			si->isInRedir = 1;
+			si->inDir = si->args[counter+1]; // Next val in array is the wanted argument
+			free(si->args[counter]);
+			si->args[counter] = NULL;
+			si->args[counter + 1] = NULL;
+			printf("\tNew Input Dir: %s\n\tWill there be input redir? 1 for yes: %d\n", si->inDir, si->isInRedir);
+
+			counter++; //Basically, this will skip to either garbage or '>'
+		} else if (strcmp(si->args[counter], ">") == 0) {
+			si->isOutRedir = 1;
+			si->outDir = si->args[counter+1]; // Next val in array is the wanted argument
+			free(si->args[counter]);
+			si->args[counter] = NULL;
+			si->args[counter + 1] = NULL; // Points only array to NULL, prevents these args from polluting commands
+			printf("\tNew Output Dir: %s\n\tWill there be output redir? 1 for yes: %d\n", si->outDir, si->isOutRedir);
+
+			counter++; //This will skip to either garbage or '<'
+		}
+
+		counter++;
+	}
+
+}
 
 void cleanUpZombies(struct shellInfo *si) {
 	pid_t zomPid;
@@ -199,7 +255,7 @@ void cleanUpZombies(struct shellInfo *si) {
 			si->bgPidList[i] = 0;
 			si->bgProcessCount--;
 			cleanPidList(si);
-			i--; // Since you dragged the vals forward, you have to drag them back here to clean all zombies
+			i--; // The array is 'dragged forward' by cleanPidList, so the iterator also must be to get every zombie
 		}
 	}
 }

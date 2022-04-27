@@ -17,8 +17,16 @@ void freeSIMembers(struct shellInfo *si)
 	
 		
 	free(si->line);
-
 	free(si->args);
+
+	//Only free these members if there was input/output redirection respectively
+	
+	if (si->isInRedir == 1)
+		free(si->inDir);
+
+	if (si->isOutRedir == 1)
+		free(si->outDir);
+		
 }
 
 
