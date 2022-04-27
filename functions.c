@@ -122,7 +122,8 @@ int executeNonBI(struct shellInfo *si)
 		if (si->isBackground){
 			si->bgPidList[si->bgProcessCount] = pid;
 			si->bgProcessCount++;
-			printf("PID of new child process: %d\nCurrent count of background processes: %d\n", pid, si->bgProcessCount);
+			printf("PID of new child process: %d\n", pid);
+			//printf("%d\n", pid);
 		}
 
 		//Have it wait while child executes
@@ -198,6 +199,7 @@ void cleanUpZombies(struct shellInfo *si) {
 			si->bgPidList[i] = 0;
 			si->bgProcessCount--;
 			cleanPidList(si);
+			i--; // Since you dragged the vals forward, you have to drag them back here to clean all zombies
 		}
 	}
 }
