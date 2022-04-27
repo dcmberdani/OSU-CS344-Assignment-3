@@ -9,6 +9,8 @@
 #include <unistd.h> //General OS functionality
 #include <wait.h> //Waitpid
 #include <sys/types.h> //pid_t
+#include <sys/stat.h> // Working with FDs
+#include <fcntl.h> // Working with FDs
 
 #include "functions.h"
 
@@ -112,13 +114,46 @@ int executeNonBI(struct shellInfo *si)
 	pid_t pid; //pid for current process
 	pid_t wpid; //pid for waiting parent process while child process executes in foreground
 	int status = 0; //status var for the waitpid function to access
+	FILE *iStream, *oStream; // For i/o redirection
+	int redirFail = 0; //Flag if input or output redirection fail;
 	
 	pid = fork();
 	if (pid == 0) {
 		//Child Process
-		//	if 'execvp' fails, print error and exit with failure
-		if (execvp(si->args[0], si->args) == -1)
-			perror("Error with 'execvp' in child process");
+		//First, redirect I/O
+		//	Background processes have /dev/null as default
+		//	This is overwritten by the '<' and '>' modifiers after
+		//	If a file fails to open, then set exit status to 1 and exit to shell
+		if (si->isBackground == 1) {
+			iStream = fopen("/dev/null", "r");
+			oStream = fopen("/dev/null", "w");
+			dup2(fileno(iStream), STDIN_FILENO);
+			dup2(fileno(oStream), STDOUT_FILENO);
+		}
+
+		if (si->isInRedir == 1) {
+			if ( !(iStream = fopen(si->inDir, "r")) ) {
+				printf("Error: couldn't open file for input\n");
+				redirFail = 1;
+			}
+			else
+				dup2(fileno(iStream), STDIN_FILENO);
+		}
+
+		if (si->isOutRedir == 1) {
+			if ( !(oStream = fopen(si->outDir, "w")) ) {
+				printf("Error: couldn't open file for input\n");
+				redirFail = 1;
+			}
+			else
+				dup2(fileno(oStream), STDOUT_FILENO);
+		}
+
+		//If 'execvp' fails, print error and exit with failure
+		//	Only run this if there were no redirection fails
+		if (redirFail == 0)
+			if (execvp(si->args[0], si->args) == -1)
+				perror("Error with 'execvp' in child process");
 		
 		//Free SI on failed child process before exiting
 		freeSIMembers(si);
@@ -201,7 +236,7 @@ void checkRedirIO(struct shellInfo *si) {
 			free(si->args[counter]);
 			si->args[counter] = NULL;
 			si->args[counter + 1] = NULL;
-			printf("\tNew Input Dir: %s\n\tWill there be input redir? 1 for yes: %d\n", si->inDir, si->isInRedir);
+			//printf("\tNew Input Dir: %s\n\tWill there be input redir? 1 for yes: %d\n", si->inDir, si->isInRedir);
 
 			counter++; //Basically, this will skip to either garbage or '>'
 		} else if (strcmp(si->args[counter], ">") == 0) {
@@ -210,7 +245,7 @@ void checkRedirIO(struct shellInfo *si) {
 			free(si->args[counter]);
 			si->args[counter] = NULL;
 			si->args[counter + 1] = NULL; // Points only array to NULL, prevents these args from polluting commands
-			printf("\tNew Output Dir: %s\n\tWill there be output redir? 1 for yes: %d\n", si->outDir, si->isOutRedir);
+			//printf("\tNew Output Dir: %s\n\tWill there be output redir? 1 for yes: %d\n", si->outDir, si->isOutRedir);
 
 			counter++; //This will skip to either garbage or '<'
 		}
