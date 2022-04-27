@@ -133,7 +133,7 @@ int executeNonBI(struct shellInfo *si)
 
 		if (si->isInRedir == 1) {
 			if ( !(iStream = fopen(si->inDir, "r")) ) {
-				printf("Error: couldn't open file for input\n");
+				printf("Error: couldn't open file for input redirection\n");
 				redirFail = 1;
 			}
 			else
@@ -142,7 +142,7 @@ int executeNonBI(struct shellInfo *si)
 
 		if (si->isOutRedir == 1) {
 			if ( !(oStream = fopen(si->outDir, "w")) ) {
-				printf("Error: couldn't open file for input\n");
+				printf("Error: couldn't open file for output redirection\n");
 				redirFail = 1;
 			}
 			else
