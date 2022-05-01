@@ -11,7 +11,10 @@ COMPILING:
 
 EXECUTING:
 	The program relies on a grading script To use it, type:
-		bash ./p3testscript-1
+		./p3testscript-1 2>&1
+		./p3testscript-1 2>&1 | more
+		./p3testscript-1 > mytestresults 2>&1
+
 	A macro has been provided in the makefile to run the script.
 		To run it type: make run
 		To run it with valgrind type: make test
