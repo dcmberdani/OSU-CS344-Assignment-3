@@ -23,7 +23,7 @@ smallsh: main.c cmdline.o functions.o shellinfo.o
 #	$(CC) cmdline.o functions.o shellinfo.o signals.o main.c -o smallsh
 
 clean:
-	rm -rf cmdline.o functions.o shellinfo.o signals.o shellinfo.h.gch junk* smallsh-test-dir smallsh ~/testdir* mytestresults
+	rm -rf cmdline.o functions.o shellinfo.o signals.o shellinfo.h.gch junk* *.txt smallsh-test-dir smallsh ~/testdir* mytestresults
 
 run:
 	./p3testscript-1 2>&1
