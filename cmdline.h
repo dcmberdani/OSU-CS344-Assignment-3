@@ -5,7 +5,7 @@
 
 #include "shellinfo.h" // For struct info
 
-void mainLoop();
+void mainLoop(struct shellInfo *si);
 
 char* getLineInput();
 

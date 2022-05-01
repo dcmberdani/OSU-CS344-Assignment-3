@@ -37,6 +37,10 @@ struct shellInfo {
 	int pIfSignaled;
 	int pExitStatus;
 	int pTermSignal;
+
+	//Signal Handlers
+	struct sigaction SIGINT_act;
+	struct sigaction SIGSTP_act;
 };
 
 

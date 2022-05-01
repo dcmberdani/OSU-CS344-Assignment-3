@@ -15,23 +15,22 @@
 
 //INCLUDE FUNCTION DEFINITIONS BELOW
 //	ADAPTED FROM https://brennan.io/2015/01/16/write-a-shell-in-c/
-void mainLoop() 
+void mainLoop(struct shellInfo *si)
 {
-	struct shellInfo *si = malloc (sizeof (struct shellInfo));
-	//Some necessary initializations
-	si->shellPID = getpid();
-	si->bgProcessCount = 0;
-	si->pIfExited = 0;
-	si->pIfSignaled = 0;
-	si->status = 1; //Keep running on initial comment
 
 	do {
 		printf(": ");
+		fflush(stdout);
+		//Flush buffer to print out prompt
 
 		//Just prompt again if a comment or empty prompt is found
-		si->line = getLineInput() ;
+		//	Also prompts again if sigstop was entered
+		si->line = getLineInput();
 		if (lineIsValid(si->line) == 0) 
 			continue;
+		
+		
+		//printf(si->line);//Meme to see if it works with bash
 
 		si->args = tokenizeLine(si->line);
 		si->argcount = countArgs(si->args);
@@ -40,26 +39,30 @@ void mainLoop()
 		//AFTER THAT WORK TAKING USER INPUT, DO FUNCTIONS HERE
 		//status = executeCommand(si);
 		si->status = executeCommand(si);
+		fflush(stdout);
+		//fflush(NULL); //flush all after reading in from stdin
+
 
 		//Some members are allocated in called functions, not in the main loop
 		freeSIMembers(si);
 
 		//After a single loop, clean up every zombie
 		cleanUpZombies(si);
+		
+		//Flush buffer after everything
+		fflush(stdout);
+
 
 		
 	} while (si->status);
 
-	//After finishing shell, free it
-	free(si);
 }
 
 //Get input from STDIN
 //	ADAPTED FROM https://brennan.io/2015/01/16/write-a-shell-in-c/
+extern int sigStopCalled; //Prevents I/O issues here
 char* getLineInput() {
-	int position = 0;
 	char *buffer = malloc (sizeof(char) * CMDLINE_BUFFER_SIZE); //Max of 2048 chars, defined as constant
-	int c; //current char being read in; stored as int to not mess up EOF
 
 	//Error handling; print to stderr if an allocation failure happens
 	if (!buffer) {
@@ -67,25 +70,21 @@ char* getLineInput() {
 		exit(EXIT_FAILURE);
 	}
 
+	//Read in using fgets()
+	fgets(buffer, CMDLINE_BUFFER_SIZE, stdin);
 
-	//Read stdin until we hit EOF/newLine, keeping track of the position
-	//	Before eof/newline, copy the current char into the buffer
-	//	At eof/newline, make the ending char null, to act as the null terminator, then reutrn
-	while (1) {
-		c = getchar(); //from stdio.h
-
-		if (c == EOF)
-			printf("WE HAVE RECEIVED EOF");
-
-		if (c == EOF || c == '\n'){
-			buffer[position] = '\0';
-			return buffer;
-		} else {
-			buffer[position] = c;
-		}
-
-		position++;
+	//if ctrlz is read, set the buffer to '\0' just to prevent undefined behavior
+	//	Note: only needed if ctrl+z is used
+	//	If kill -SIGTSTP $$ is used, then this actually breaks it
+	/*
+	if (sigStopCalled == 1) {
+		sigStopCalled = 0;
+		buffer[0] = '\0';
 	}
+	*/
+	
+
+	return buffer;
 
 	//No resizing of the buffer is needed;
 
@@ -93,7 +92,7 @@ char* getLineInput() {
 
 // Validates the line input, making sure there are no chars
 int lineIsValid(char* line){
-	if (line[0] == '\0' || line[0] == '#') {
+	if (line[0] == '\n' || line[0] == '\0' || line[0] == '#') {
 		free(line); //Not going to be freed in the loop
 		return 0;
 	}
@@ -157,6 +156,8 @@ void expandVars(char** args) {
 
 	char *lPtr, *rPtr, *idPtr, *out;
 
+	//fflush(NULL); //Prevents issues with sprintf
+
 	currArg = args[counter];
 	while (args[counter]) {
 		//If an instance of "$$" is found, place it in 'idPtr'
@@ -201,6 +202,8 @@ void expandVars(char** args) {
 		counter++;
 		currArg = args[counter];
 	}
+
+	//fflush(NULL); //Prevents issues after sprintf
 
 }
 

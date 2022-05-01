@@ -28,4 +28,8 @@ int isBgProc(struct shellInfo *si);
 
 void cleanUpZombies(struct shellInfo *si);
 
+void handle_SIGINT();
+
+void handle_SIGSTP();
+
 #endif
