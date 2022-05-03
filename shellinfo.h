@@ -9,7 +9,7 @@
 
 #include <signal.h>
 
-//STRUCT THAT STORES ALL INFORMATION
+//STRUCT THAT STORES ALL INFORMATION FOR THE SHELL
 struct shellInfo {
 
 	//Info from the command line
@@ -45,15 +45,23 @@ struct shellInfo {
 
 
 //FUNCTION TO HANDLE STRUCT MEMORY
+/*
+ * Name: freeSIMembers
+ * Description: Frees the members of the shellInfo struct that have dynamic memory
+ * 	This includes the line input, the tokenized line array, and the redirection directories
+ * Preconditions: An SI struct with allocated memory
+ * Postconditions: An SI struct with freed memory
+ */
 void freeSIMembers(struct shellInfo *si);
 
+/*
+ * Name: cleanPidList
+ * Description: re-organizes the PID list
+ * 	'slides down' all indices on the PID list so that they all lie on the earliest indices
+ * 	This is done to prevent bugs when removing zombie children
+ * Preconditions: a PID list with some members
+ * Postconditions: a reorganized PID list
+ */
 void cleanPidList(struct shellInfo *si);
-//SIGNAL HANDLERS
-//	From C lecture
-//static volatile sig_atomic_t recSIGINT = 0;
-//volatile sig_atomic_t recSIGINT = 0;
-
-//static void hijackSIGINT(int sig);
-//void hijackSIGINT(int sig);
 
 #endif

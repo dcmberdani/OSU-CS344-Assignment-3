@@ -123,6 +123,8 @@ int executeNonBI(struct shellInfo *si)
 		//Now, don't ignore SIGINT if not background
 		if (si->isBackground == 0) {
 			si->SIGINT_act.sa_handler = &handle_SIGINT; 
+			// We don't need a custom handler since it'll be overwritten anyways
+			// 	But, this already works so I'm not gonna break it
 			sigaction(SIGINT, &si->SIGINT_act, NULL);
 		}
 
@@ -320,11 +322,13 @@ void cleanUpZombies(struct shellInfo *si) {
 }
 
 
+
 void handle_SIGINT() {
 	write(1, "INT REC\n", 8);
 	exit(1);
 
 }
+
 
 //int globalFgOnlyMode = 0;
 int sigStopCalled = 0;
